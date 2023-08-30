@@ -5,5 +5,6 @@ export class Bike{
         public bodySize:number,
         public maxLoad:number,
         public rate:number,
+        public id?:string
     ){}
 }
