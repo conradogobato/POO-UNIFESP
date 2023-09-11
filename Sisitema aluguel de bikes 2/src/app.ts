@@ -7,7 +7,6 @@ export class App{
     users: User[] = []
     bikes: Bike[] = []
     rents: Rent[] = []
-
     findUser(email:string){
         return this.users.find(user => user.email == email)
     }
@@ -58,6 +57,34 @@ export class App{
             const remove_index = this.rents.findIndex(rent => (rent.bike.id === bike.id) && (rent.user.id === user.id))
             this.rents.splice(remove_index, 1)
         }
+    }
+
+    listBike(bikes: Bike[]){
+        bikes.forEach(bike => {
+            console.log(bike.name)
+        });
+    }
+    listUser(users: User[]){
+        users.forEach(user => {
+            console.log(user.name)
+        });
+    }
+    listRent(rents: Rent[]){
+        rents.forEach(rent => {
+            console.log(rent)
+        });
+    }
+    authenticateUser(userId: string, password: string, users: User[]){
+
+        const toAuthenticate = users.filter(user => userId === user.id)[0]
+
+        try{
+            toAuthenticate.password === password
+            return('Authenticated')
+        }catch(err){
+            console.log('Error to authenticate')
+        }
+        
     }
 }
 
