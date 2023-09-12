@@ -24,6 +24,4 @@ export class Rent{
     //         return startDate <= rent.dateTo && endDate >= rent.dateFrom
     //     })
         
-    }
-
 }
