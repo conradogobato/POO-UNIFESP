@@ -38,25 +38,35 @@ export class App{
         }
     }
     
-    rentBike(bike:Bike,user:User, startDate: Date, endDate:Date){
-        if(this.rents.some(Rrent =>{return Rrent.bike.id === bike.id})){
-            const filtered_array = this.rents.filter(rent => rent.bike.id === bike.id)
-            if(Rent.create(filtered_array, bike, user,startDate, endDate)){
-                this.rents.push(Rent.create(filtered_array, bike, user,startDate, endDate))
-            }
-            else{
-                throw('Error to create rent!!')
-            }
+    rentBike(bikeId: string, userEmail: string): void {
+        const bike = this.bikes.find(bike => bike.id === bikeId)
+        if (!bike) {
+            throw new Error('Bike not found.')
         }
-        else{
-            this.rents.push(Rent.create(this.rents, bike, user,startDate, endDate))
-    }}
+        if (!bike.available) {
+            throw new Error('Unavailable bike.')
+        }
+        const user = this.findUser(userEmail)
+        if (!user) {
+            throw new Error('User not found.')
+        }
+        bike.available = false
+        const newRent = new Rent(bike, user, new Date())
+        this.rents.push(newRent)
+    }
 
     returnBike(bike:Bike, user:User){
-        if(this.rents.some(Rrent =>{return Rrent.bike.id === bike.id})){
-            const remove_index = this.rents.findIndex(rent => (rent.bike.id === bike.id) && (rent.user.id === user.id))
-            this.rents.splice(remove_index, 1)
-        }
+        const now = new Date()
+        const rent = this.rents.find(rent =>
+            rent.bike.id === bike.id &&
+            rent.user.email === user.email &&
+            !rent.dateTo
+        )
+        if (!rent) throw new Error('Rent not found.')
+        rent.dateTo = now
+        rent.bike.available = true
+        const hours = diffHours(rent.dateTo, rent.dateFrom)
+        return hours * rent.bike.rate
     }
 
     listBike(bikes: Bike[]){
@@ -88,5 +98,8 @@ export class App{
     }
 }
 
-
-
+function diffHours(dt2: Date, dt1: Date) {
+    var diff = (dt2.getTime() - dt1.getTime()) / 1000;
+    diff /= (60 * 60);
+    return Math.abs(diff);
+  }
