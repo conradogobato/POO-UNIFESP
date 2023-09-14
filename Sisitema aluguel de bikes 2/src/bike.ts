@@ -6,6 +6,7 @@ export class Bike{
         public maxLoad:number,
         public rate:number,
         public id?:string,
-        public available: boolean = true
+        public available: boolean = true,
+        public coords: number[] = [],
     ){}
 }

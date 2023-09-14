@@ -96,6 +96,11 @@ export class App{
         }
         
     }
+
+    getBikeloc(lat: number, lon: number, bike: Bike){
+        bike.coords.push(lat)
+        bike.coords.push(lon)
+    }
 }
 
 function diffHours(dt2: Date, dt1: Date) {
