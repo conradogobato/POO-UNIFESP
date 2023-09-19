@@ -1,41 +1,54 @@
 import { Bike } from "./bike";
+import { Crypt } from "./crypt";
 import { Rent } from "./rent";
 import { User } from "./user";
-import crypto from 'crypto';
+import { Location } from "./location";
+import crypto from 'crypto'
 
-export class App{
+export class App {
     users: User[] = []
     bikes: Bike[] = []
     rents: Rent[] = []
-    findUser(email:string){
-        return this.users.find(user => user.email == email)
+    crypt: Crypt = new Crypt()
+
+    findUser(email: string): User {
+        return this.users.find(user => user.email === email)
     }
 
-    addUser(user: User): void{
-        if(this.users.some(Ruser =>{return Ruser.email === user.email})){
-            throw new Error('User email already exist!')
+    async registerUser(user: User): Promise<string> {
+        for (const rUser of this.users) {
+            if (rUser.email === user.email) {
+                throw new Error('Duplicate user.')
+            }
         }
-        else{
-            user.id = crypto.randomUUID()
-            this.users.push(user)
-        }
+        const newId = crypto.randomUUID()
+        user.id = newId
+        const encryptedPassword = await this.crypt.encrypt(user.password)
+        user.password = encryptedPassword
+        this.users.push(user)
+        return newId
     }
 
-    addBike(bike: Bike): void{
-        if(this.bikes.some(Rbike =>{return Rbike.name === bike.name})){
-            throw new Error('Bicycle already exist!')
-        }
-        else{
-            bike.id = crypto.randomUUID()
-            this.bikes.push(bike)
-        }
+    async authenticate(userEmail: string, password: string): Promise<boolean> {
+        const user = this.findUser(userEmail)
+        if (!user) throw new Error('User not found.')
+        return await this.crypt.compare(password, user.password)
     }
 
-    removeUser(email: string){
-        if(this.users.some(Ruser =>{return Ruser.email === email})){
-            const remove_index = this.users.findIndex(user => user.email == email)
-            this.users.splice(remove_index, 1)
+    registerBike(bike: Bike): string {
+        const newId = crypto.randomUUID()
+        bike.id = newId
+        this.bikes.push(bike)
+        return newId
+    }
+
+    removeUser(email: string): void {
+        const userIndex = this.users.findIndex(user => user.email === email)
+        if (userIndex !== -1) {
+            this.users.splice(userIndex, 1)
+            return
         }
+        throw new Error('User does not exist.')
     }
     
     rentBike(bikeId: string, userEmail: string): void {
@@ -55,56 +68,45 @@ export class App{
         this.rents.push(newRent)
     }
 
-    returnBike(bike:Bike, user:User){
+    returnBike(bikeId: string, userEmail: string): number {
         const now = new Date()
         const rent = this.rents.find(rent =>
-            rent.bike.id === bike.id &&
-            rent.user.email === user.email &&
-            !rent.dateTo
+            rent.bike.id === bikeId &&
+            rent.user.email === userEmail &&
+            !rent.end
         )
         if (!rent) throw new Error('Rent not found.')
-        rent.dateTo = now
+        rent.end = now
         rent.bike.available = true
-        const hours = diffHours(rent.dateTo, rent.dateFrom)
+        const hours = diffHours(rent.end, rent.start)
         return hours * rent.bike.rate
     }
 
-    listBike(bikes: Bike[]){
-        bikes.forEach(bike => {
-            console.log(bike.name)
-        });
+    listUsers(): User[] {
+        return this.users
     }
-    listUser(users: User[]){
-        users.forEach(user => {
-            console.log(user.name)
-        });
-    }
-    listRent(rents: Rent[]){
-        rents.forEach(rent => {
-            console.log(rent)
-        });
-    }
-    authenticateUser(userId: string, password: string, users: User[]){
 
-        const toAuthenticate = users.filter(user => userId === user.id)[0]
+    listBikes(): Bike[] {
+        return this.bikes
+    }
 
-        try{
-            toAuthenticate.password === password
-            return('Authenticated')
-        }catch(err){
-            console.log('Error to authenticate')
+    listRents(): Rent[] {
+        return this.rents
+    }
+
+    moveBikeTo(bikeId: string, location: Location) {
+        const bike = this.bikes.find(bike => bike.id === bikeId)
+        if(bike){
+            (bike.location.latitude = location.latitude) && (bike.location.longitude = location.longitude);
         }
-        
-    }
-
-    getBikeloc(lat: number, lon: number, bike: Bike){
-        bike.coords.push(lat)
-        bike.coords.push(lon)
+        else{
+            throw new Error('Error to move bike.')
+        }
     }
 }
 
 function diffHours(dt2: Date, dt1: Date) {
-    var diff = (dt2.getTime() - dt1.getTime()) / 1000;
-    diff /= (60 * 60);
-    return Math.abs(diff);
-  }
+  var diff = (dt2.getTime() - dt1.getTime()) / 1000;
+  diff /= (60 * 60);
+  return Math.abs(diff);
+}

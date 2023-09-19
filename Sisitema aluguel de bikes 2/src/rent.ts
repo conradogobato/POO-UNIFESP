@@ -5,8 +5,8 @@ export class Rent{
     constructor(
         public bike:Bike,
         public user:User,
-        public dateFrom:Date,
-        public dateTo?:Date,
+        public start:Date,
+        public end?:Date,
         public dateReturned?:Date,
     ){}
 
