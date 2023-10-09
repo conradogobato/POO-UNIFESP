@@ -30,4 +30,6 @@ export class FakeBikeRepo implements BikeRepo {
         const bikeIndex = this.bikes.findIndex(bike => bike.id === id)
         if (bikeIndex !== -1) this.bikes[bikeIndex] = bike
     }
+
+
 }
